@@ -13,5 +13,6 @@ export default function Admin() {
 		<div>
 			<div> Admin </div>
 			<Button onClick={logout}>Log out</Button>
-		</div>);
+		</div>
+	);
 }

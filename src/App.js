@@ -4,72 +4,44 @@ import Home from './pages/Home';
 import Admin from './pages/Admin';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import Course from './pages/Course';
+import Survey from './pages/Survey';
+import Form from './pages/Form';
+import Profile from './pages/Profile';
+import Dashboard from './pages/Dashboard';
+import Notifications from './pages/Notifications';
 import PrivateRoute from './PrivateRoute';
-import { AuthContext } from "./context/auth";
+import Auth from "./context/Authentication";
 import PropTypes from 'prop-types';
-import { withStyles } from '@material-ui/core/styles';
-import { AppBar, Toolbar, IconButton, Menu, MenuItem } from '@material-ui/core';
-import MenuIcon from '@material-ui/icons/Menu';
-import { Link as RouterLink } from 'react-router-dom';
-
-import ListItemLink from "./components/ListItemLink";
+import { makeStyles } from '@material-ui/core/styles';
+import MainBar from './components/MainNavBar';
 
 import { styles } from "./styles/styles"
 
 import './App.css';
 
 function App(props) {
-  const [authTokens, setAuthTokens] = useState();
-  const [anchorEl, setAnchorEl] = useState(null);
-  const open = Boolean(anchorEl);
-  const { classes } = props;
+  
+  const classes = makeStyles(styles)();
+
   const setTokens = (data) => {
     localStorage.setItem("tokens", JSON.stringify(data));
-    setAuthTokens(data);
   }
 
   return (
-    <AuthContext.Provider 
-          value={{authTokens, setAuthTokens: setTokens}}>
+    <Auth>
       <Router>
-        <AppBar position="static">
-          <Toolbar>
-            <IconButton edge="start" className={classes.menuButton} color="inherit" aria-label="menu"  onClick={(ev)=>setAnchorEl(ev.currentTarget)}>
-              <MenuIcon />
-            </IconButton>
-            <Menu
-                id="menu-appbar"
-                anchorEl={anchorEl}
-                anchorOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-                keepMounted
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-                open={open}
-                onClose={ev=>setAnchorEl(null)}
-              >
-                <MenuItem onClick={ev=>setAnchorEl(null)} component={RouterLink} to="/">Home Page</MenuItem>
-                <MenuItem onClick={ev=>setAnchorEl(null)} component={RouterLink} to="/admin">Admin</MenuItem>
-            </Menu>
-          </Toolbar>
-        </AppBar>
-        <div> 
-          <Route exact path="/" component={Home} />
-          <Route path="/login" component={Login} />
-          <Route path="/signup" component={Signup} />
-          <PrivateRoute path="/admin" component={Admin} />
-        </div>
-      </Router>
-    </AuthContext.Provider>
+            <MainBar />
+            <Route exact path='/' component={Home} />
+            <Route path='/profile' component={Profile} />
+            <Route path='/notifications' component={Notifications} />
+            <Route path='/form' component={Form} />
+            <Route path="/dash" component={Dashboard} />
+            <Route path="/login" component={Login} />
+            <PrivateRoute component={Admin} path='/admin' />
+        </Router>
+    </Auth>
   );
 }
 
-App.propTypes = {
-   classes: PropTypes.object.isRequired
-};
-
-export default withStyles(styles)(App);
+export default App;

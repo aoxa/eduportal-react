@@ -1,17 +1,31 @@
 import React from "react";
 import { Route, Redirect } from "react-router-dom";
-import { useAuth } from "./context/auth";
+import { AuthConsumer } from "./context/auth";
+import Can from "./auth/Can"
 
 
 export default function PrivateRoute( {component: Component, ...rest}) {
-	const {authTokens} = useAuth();
-	
 	return(
-		<Route {...rest} render={(props)=>(
-			authTokens ?  (
-			<Component {...props} /> ):
-			<Redirect to={{pathname: "/login", state: { referer: props.location}}} />
-		)}
-		/>
+		<AuthConsumer>
+			{({ user }) => 	(
+				<Route {...rest} render={(props)=>(
+				
+					<Can role={user.role}
+
+						perform={rest.perform}
+					
+						yes={() => (		
+							<Component {...props} /> 
+							)}
+					
+						no={() => 
+							(
+								<Redirect to={{pathname: "/login", state: { referer: props.location}}} />
+							)}
+					/>
+				)} 
+				/>
+			)}			
+		</AuthConsumer>
 	);
 }

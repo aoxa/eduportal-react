@@ -1,17 +1,21 @@
 import React, { useState } from "react"
-import { Typography, TextField, Paper, Button } from '@material-ui/core';
+import { Typography, TextField, Paper, Button, Grid } from '@material-ui/core';
 import { Delete } from '@material-ui/icons';
 import { List, ListItem, ListItemText, ListItemSecondaryAction, IconButton } from '@material-ui/core';
-import { withStyles }  from '@material-ui/core/styles';
+import { makeStyles }  from '@material-ui/core/styles';
 import { styles } from "../styles/styles"
 
-function Home(props) {
+const useStyles = makeStyles( styles );
+
+function MainSection(props) {
+	const classes  = useStyles();
 	const [name, setName] = useState("");
 	const [exercises, setExercises] = useState([]);
-	const { classes } = props;
+	
 
 	return (
-			<Paper className={classes.paper} elevation={5}>
+		<Grid item xs={12} sm={9}>
+			<Paper className={classes.paper} elevation={3}>
 				<Typography variant="h4" align="center" gutterBottom> Exercises </Typography>
 					
 				<form className={classes.form} onSubmit={ (e) => {
@@ -32,14 +36,42 @@ function Home(props) {
 								onClick={e=>{
 									let newEx = exercises.filter(el=>el.id !== id);
 									setExercises(newEx);
-								}}><Delete /></IconButton>
+								}}>
+									<Delete />
+								</IconButton>
 							</ListItemSecondaryAction>
 						</ListItem>
 					)}
 				</List>
-
 			</Paper>
+		</Grid>
+		);
+}
+
+function SideBar(props) {
+	const classes  = useStyles();
+
+	return (
+		<Grid item xs={12} sm={3}>
+			<Paper className={classes.paper} elevation={3} >
+				<Typography variant="h6" align="center" gutterBottom> Courses </Typography>
+			</Paper>
+		</Grid>
+		
+		);
+}
+
+function Home(props) {
+	const classes  = useStyles();
+
+	return (
+			
+			<Grid container spacing={1}>
+				<MainSection classes={classes}/>	
+				<SideBar classes={classes}/>		
+			</Grid>
+						
 		)
 }
 
-export default withStyles(styles)(Home);
+export default Home;
