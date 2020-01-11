@@ -50,19 +50,28 @@ class SimpleList extends React.Component {
 	render() {
 		const { items } = this.state;
 		const { classes, Header, Content, actions } = this.props;
+		const  handleEdit = async (id, name) => {
+			await axios.put(properties.server + this.props.resource + "/" + id, {name: name});
+
+			return true;
+		};
 		
 		return (
 			<TableContainer > 
 				<Table className={classes.table}>
 					<Header />
 					
-					<Content actions={actions} items={this.state.items} refresh={this.retrieveData} />	
+					<Content 
+							actions={actions} 
+							items={this.state.items} 
+							refresh={this.retrieveData} 
+							itemUpdate={handleEdit} />	
 				</Table>
 				
-				<Button onClick={()=>{this.retrieveData()}} name="reset"
+				<Button className={classes.button} onClick={()=>{this.retrieveData()}} name="reset"
 					variant="contained" color="primary">Primera Pagina</Button> 
 
-				{this.state.hasNext && <Button onClick={()=>{this.retrieveData(this.state.pageHash, true)}} name="next"
+				{this.state.hasNext && <Button className={classes.button} onClick={()=>{this.retrieveData(this.state.pageHash, true)}} name="next"
 					variant="contained" color="primary">Pagina Siguiente</Button> }
 			</TableContainer>
 			);

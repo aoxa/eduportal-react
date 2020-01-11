@@ -1,5 +1,6 @@
 import React from 'react';
-import { Paper, Grid } from '@material-ui/core';
+import Paper from '@material-ui/core/Paper';
+import Grid from '@material-ui/core/Grid';
 import { withStyles }  from '@material-ui/core/styles';
 import { styles } from "../styles/styles"
 import { Link as RouterLink } from 'react-router-dom';

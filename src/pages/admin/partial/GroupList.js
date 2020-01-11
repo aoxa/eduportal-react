@@ -32,7 +32,6 @@ export default function GroupList() {
 			}
 		];
 
-
 		return (
 			<SimpleList Header={TableHeader} Content={TableContent} actions={actions} resource="groups" />
 		);

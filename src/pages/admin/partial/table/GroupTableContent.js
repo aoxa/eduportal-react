@@ -5,6 +5,12 @@ import TableBody from '@material-ui/core/TableBody';
 import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
 import Button from '@material-ui/core/Button';
+import Dialog from '@material-ui/core/Dialog';
+import DialogTitle from '@material-ui/core/DialogTitle';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import TextField from '@material-ui/core/TextField';
 import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
@@ -28,10 +34,17 @@ export class TableContent extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
+			modal: {
+				open: false,
+				content: "",
+				id: undefined
+			},
 			actions: this.props.actions,
 			selectedId: null
 		}
 		this.handleClose = this.handleClose.bind(this); 
+		this.handleModalClose = this.handleModalClose.bind(this);
+		this.handleModalSave = this.handleModalSave.bind(this);
 	}
 	
 	handleClose(item, callback) {		
@@ -50,6 +63,26 @@ export class TableContent extends React.Component {
 			});
 
 		if(callback) callback();
+	}
+
+	handleModalClose() {
+		this.setState({modal:{open: false, content:"", id: undefined}});
+	}
+
+	handleModalSave() {
+		const result = this.props.itemUpdate(this.state.modal.id, this.state.modal.content);
+
+		if(result) { 
+			const { items } = this.props;
+
+			for(let i = 0; i < items.length; i++) {
+				if(items[i].id === this.state.modal.id) {
+					items[i].name = this.state.modal.content;
+				}
+			}
+		}
+
+		this.handleModalClose();
 	}
 
 	handleOpen(item, id) {
@@ -82,12 +115,12 @@ export class TableContent extends React.Component {
 							<TableCell>
 								{this.state.actions.map((actionItem, key) => {
 									return (
-										<IconButton onClick={ ()=> this.handleOpen(actionItem, item.id)} >
+										<IconButton key={key} onClick={ ()=> this.handleOpen(actionItem, item.id)} >
 											{actionItem.action.icon}
 										</IconButton>
 									);									
 								})}
-								<IconButton>
+								<IconButton onClick={()=>this.setState({modal:{open:true, content:item.name, id: item.id}})}>
 									<EditIcon />
 								</IconButton>
 							</TableCell>
@@ -98,7 +131,7 @@ export class TableContent extends React.Component {
 
 				{this.state.actions.map((item, key) => {
 					return (
-						<ConfirmDialog title={item.dialog.title}
+						<ConfirmDialog key={key} title={item.dialog.title}
 							text={item.dialog.text}
 							open={item.dialog.open}
 							handleClose={(e) => this.handleClose(item)}
@@ -107,6 +140,37 @@ export class TableContent extends React.Component {
 							/>
 						)	
 				})}
+
+
+				<Dialog fullWidth={true}
+						maxWidth = {'sm'} 
+						open={this.state.modal.open} 
+						onClose={this.handleModalClose} 
+						aria-labelledby="form-dialog-title">
+			        <DialogTitle id="form-dialog-title">Editar</DialogTitle>
+			        <DialogContent>
+			          <DialogContentText>
+			          </DialogContentText>
+			          <TextField
+			            autoFocus
+			            margin="dense"
+			            id="modal-name"
+			            label="Nombre"
+			            type="text"
+			            value={this.state.modal.content}
+			            onChange={(e)=> this.setState({modal: {open: true, content:e.target.value, id: this.state.modal.id }})}
+			            fullWidth
+			          />
+			        </DialogContent>
+			        <DialogActions>
+			          <Button onClick={this.handleModalClose} color="primary">
+			            Cancelar
+			          </Button>
+			          <Button onClick={this.handleModalSave} color="primary">
+			            Editar
+			          </Button>
+			        </DialogActions>
+			      </Dialog>
 				
 			</React.Fragment>
 		);	

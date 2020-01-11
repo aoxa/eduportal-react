@@ -1,33 +1,36 @@
 import React, { useState } from 'react';
+import axios from 'axios';
+
 import Typography from '@material-ui/core/Typography';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
+import Snackbar from '@material-ui/core/Snackbar';
+import Alert from '@material-ui/lab/Alert';	
+
 import { makeStyles } from '@material-ui/core/styles';
 import { adminStyles } from '../../../styles/styles';
-import axios from 'axios';
-
 import { properties } from '../../../properties'; 
+
+
 
 export default function AddGroup(props) {
 	const [ groupName, setGroupName ] = useState("");
-	let error = false;
+	const [ success, setSuccess ] = useState(false);
+	const [ error, setError ] = useState(false);
 
-	function setError() {
-		error = true;
-	}
 
-	function postLogin() {
+	function agregarGrupo() {
 		axios.post(properties.server + "groups", 
 					{name: groupName})
-			.then(result=>{
-	
-				if(result.status === 200) {
-					// setAuthTokens(result.data);
-					//setLoggedIn(true);
+			.then(result=>{	
+				if(result.status !== 200) {
+					setError(true);
+				} else {
+					setSuccess(true);
 				}
 			}).catch(e=>{
-				setError();
-			})
+				setError(true);
+			});
 	}
 
 	return (
@@ -41,9 +44,13 @@ export default function AddGroup(props) {
 				margin='normal' />
 
 			<Button fullWidth variant="contained" color="primary" 
-			onClick={postLogin}>Crear</Button>
-			{error && <div>Error creando el grupo</div>}
-            
+			onClick={agregarGrupo}>Crear</Button>
+            <Snackbar anchorOrigin={{ vertical: 'top', horizontal: 'center' }} open={error} onClose={()=>setError(false)} autoHideDuration={3000}>  
+            	<Alert variant="filled" elevation={6} severity="error">Error creando el grupo</Alert>
+            </Snackbar>
+            <Snackbar anchorOrigin={{ vertical: 'top', horizontal: 'center' }} open={success} onClose={()=>setSuccess(false)} autoHideDuration={3000}>  
+            	<Alert variant="filled" elevation={6} severity="success">Grupo creado con exito</Alert>
+            </Snackbar>
 		</div>
 	);
 }

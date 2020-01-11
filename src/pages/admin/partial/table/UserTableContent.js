@@ -42,7 +42,7 @@ export const TableContent = (props) =>  {
 				
 				{ items.map((item, key) =>{
 				return(
-					<UserRow key={key} user={item} 
+					<UserRow key={key} itemKey={key} user={item} 
 					/>
 				)
 				}) }
@@ -53,12 +53,12 @@ export const TableContent = (props) =>  {
 }
 
 const UserRow = (props) => {
-	const { user, key } = props;
+	const { user, itemKey } = props;
 
 	const [enabled, setEnabled] = useState(user.enabled);
 
 	return (
-		<TableRow key={ key }>
+		<TableRow key={ itemKey }>
 			<TableCell>{user.id}</TableCell>
 			<TableCell>{user.firstName}</TableCell>
 			<TableCell>{user.lastName}</TableCell>

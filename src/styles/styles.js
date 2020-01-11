@@ -59,6 +59,11 @@ export const adminStyles = (theme)=>  (
       marginRight: 0,
       color: 'white'
     },
+    listItem: {
+      '&.active': {
+        backgroundColor: '#eee'
+      }
+    },
 
     paper: { 
       padding: 20,
@@ -116,17 +121,28 @@ export const adminStyles = (theme)=>  (
       padding: theme.spacing(0, 1),
       ...theme.mixins.toolbar,
     },
+
     content: {
       flexGrow: 1,
       padding: theme.spacing(3),
     },
+
     form: {    
         display: 'flex',    
         alignItems: 'baseline',    
         justifyContent: 'space-evenly'  
       },
+
     table: {
       minWidth: 650,
+    },
+
+    gridMargin: {
+      padding: '0 15px'
+    },
+    button: {
+      marginTop: '20px',
+      marginRight: '10px'
     }
   }
 );
