@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { withStyles }  from '@material-ui/core/styles';
+import { withStyles } from '@material-ui/core/styles';
 import { styles } from "../styles/styles"
 import Paper from '@material-ui/core/Paper';
 import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
+import IconButton from '@material-ui/core/IconButton';
 import RadioGroup from '@material-ui/core/RadioGroup';
 import Radio from '@material-ui/core/Radio';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
@@ -19,13 +20,15 @@ import AddCircleOutlineIcon from '@material-ui/icons/AddCircleOutline';
 
 function Survey(props) {
 	const { classes } = props;
+	const [ item, setItem ] = useState({type: "text", title: "", tip:"", value:[]});
+
 	const [ title, setTitle ] = useState("");
 	const [ description, setDescription ] = useState("");
 	const [ itemType, setItemType ] = useState("");
 	const [ itemTitle, setItemTitle ] = useState("");
 	const [ itemTip, setItemTip ] = useState("");
 
-	const blankItem = {type: "", title: "", tip:"", value:[]};
+	const blankItem = {type: "Texto", title: "", tip:"", value:[]};
 	const blankValue = {option: "", selected: false};
 	const [ items, setItems ] = useState(
 		[]);
@@ -47,14 +50,16 @@ function Survey(props) {
 	}
 
 	function addElement() {
-		const element = {...blankItem};
-		element.type = itemType;
-		element.title = itemTitle;
-		setItemTitle("");
-		element.tip = itemTip;
-		setItemTip("");
+		const element = {...item};
+		
+		element.type = item.type;
+		element.title = item.title;
+		element.tip = item.tip;
 		element.value.push({...blankValue})
+		
 		setItems([...items, element]);
+
+		setItem({...blankItem});
 	}
 
 	function addOption(idx) {
@@ -90,7 +95,7 @@ function Survey(props) {
 							const valueName = "option-" + name + "-" +idx;
 							
 							return(
-								<React.Fragment>
+								<React.Fragment key={idx}>
 									<TextField name={valueName}
 											id={valueName}
 											label="Opcion"
@@ -120,12 +125,19 @@ function Survey(props) {
 			<div>aaa</div>)
 	}
 
+	const handle = (e) => {
+		console.log(item)
+		const cp = {...item};
+		cp[e.target.name] = e.target.value;
+		setItem(cp);
+	}
+
 	return (
 		<Grid>
 
 			<Paper className={classes.paper} elevation={5}>
 
-				<TextField 	name='title'
+				<TextField 
 					label='Titulo del cuestionario' 
 					value={title} 
 					type='text'
@@ -142,44 +154,52 @@ function Survey(props) {
 					onChange={e => {setDescription(e.target.value)}} 
 					margin='normal' />
 				
-				<div>
-					<TextField name="itemTitle"
-						value={itemTitle}
-						type="text"
-						onChange={(e)=>{setItemTitle(e.target.value)}}
-						label="Pregunta"
-						id="itemTitle"
-						/>
-						
-					<FormControl className={classes.formControl}>
-				        <InputLabel htmlFor='itemType'>Tipo de campo</InputLabel>
-				        <NativeSelect
-						  name="itemType"
-				          value={itemType}
-				          onChange={(e)=>{setItemType(e.target.value)}}
-				          id="itemType"
-				        >
-				        	<option value="text">Texto</option>
-				        	<option value="checkbox">Opcion multiple</option>
-				        	<option value="radio">Opcion unica</option>
-				        	<option value="select">Opcion unica, desplegable</option>
-				        	<option value="select-multi">Opcion multiple desplegable</option>
-			        	</NativeSelect>
-			        </FormControl>
-			        <TextField name="tipId"
-						value={itemTip}
-						type="text"
-						onChange={(e)=>{setItemTip(e.target.value)}}
-						label="Informacion adicional"
-						id="tipId"
-						/>
-					<FormControl>
-						<label></label>
-						<Button onClick={addElement} className="MuiInput-formControl" color="primary" aria-label="add">
-				        		<AddCircleOutlineIcon  />
-				      	</Button>
-			      	</FormControl>
-				</div>
+				<Grid container>
+					<Grid item md={4}>
+						<TextField name="itemTitle" 
+							fullWidth
+							value={item.title}
+							name="title"
+							type="text"
+							onChange={handle}
+							label="Pregunta"
+							id="itemTitle"
+							/>
+					</Grid>
+					<Grid item md={4}>
+						<FormControl className={classes.formControl}>
+					        <InputLabel htmlFor='itemType'>Tipo de campo</InputLabel>
+					        <NativeSelect
+							  name="type"
+					          value={item.type}
+					          onChange={handle}
+					          id="itemType"
+					        >
+					        	<option value="text">Texto</option>
+					        	<option value="checkbox">Opcion multiple</option>
+					        	<option value="radio">Opcion unica</option>
+					        	<option value="select">Opcion unica, desplegable</option>
+					        	<option value="select-multi">Opcion multiple desplegable</option>
+				        	</NativeSelect>
+				        </FormControl>
+			        </Grid>
+			        <Grid item md={4}>
+						<TextField 
+				        	name="tip"
+							value={item.tip}
+							type="text"
+							onChange={handle}
+							label="Informacion adicional"
+							id="tipId"
+							/>
+						<FormControl>
+							<label></label>
+							<IconButton onClick={addElement} className="MuiInput-formControl" color="primary" aria-label="add">
+					        		<AddCircleOutlineIcon  />
+					      	</IconButton>
+				      	</FormControl>
+			      	</Grid>
+				</Grid>
 
 				<div>
 
@@ -192,27 +212,34 @@ function Survey(props) {
 					const name = "element-"+idx;
 
 					return (
-						<div key={idx}>
-							<TextField name={titleId}
-								value={items[idx].title}
-								id={titleId}
-								onChange={handleChange}
-								label="Pregunta"
-								/>
-							<TextField name={tipId}
-								value={items[idx].tip}
-								id={tipId}
-								onChange={handleChange}
-								label="Informacion adicional"
-								/>
-							<FormControl>
-								<label></label>
-								<Button onClick={(e)=>addOption(idx)} className="MuiInput-formControl" color="secondary" aria-label="add">
-						        		<AddCircleOutlineIcon  />
-						      	</Button>
-					      	</FormControl>
-							<RenderOption name={name} type={items[idx].type} item={items[idx]} />
-						</div>
+						<Grid container key={idx}>
+							<Grid item md={3}>
+								<TextField name={titleId}
+									value={items[idx].title}
+									id={titleId}
+									onChange={handleChange}
+									label="Pregunta"
+									/>
+							</Grid>
+							<Grid item md={3}>
+								<TextField name={tipId}
+									value={items[idx].tip}
+									id={tipId}
+									onChange={handleChange}
+									label="Informacion adicional"
+									/>
+								<FormControl>
+									<label></label>
+									<IconButton onClick={(e)=>addOption(idx)} className="MuiInput-formControl" color="secondary" aria-label="add">
+							        		<AddCircleOutlineIcon  />
+							      	</IconButton>
+						      	</FormControl>
+					      	</Grid>
+							<Grid item md={6}>
+								<RenderOption name={name} type={items[idx].type} item={items[idx]} />
+							</Grid>
+							
+						</Grid>
 						)
 				})}
 				</div>
