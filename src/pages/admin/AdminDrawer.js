@@ -71,7 +71,7 @@ export default function AdminDrawer(props) {
 				{routes.map((prop, key) =>{
 					return(
 					<Link to={prop.url} style={{ textDecoration: 'none', color: 'inherit' }} key={key}>
-						<ListItem className={clsx(classes.listItem, {['active']: isActive(prop.url)})} button key={key}>
+						<ListItem className={clsx(classes.listItem, {active: isActive(prop.url)})} button key={key}>
 							<ListItemIcon  >
 								{prop.icon}
 							</ListItemIcon>

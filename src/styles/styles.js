@@ -1,3 +1,5 @@
+import { green } from '@material-ui/core/colors';
+
 export const styles = (theme) => (
   {
     root: {
@@ -13,37 +15,60 @@ export const styles = (theme) => (
       marginRight: '2px',
     },
     paper: { 
-      margin: 20, 
-      padding: 20 
+      padding: 20,
+      maxWidth: '80%',
+      marginTop: 30,
+      margin: `${theme.spacing(1)}px auto`,
     },
     form: {    
       display: 'flex',    
       alignItems: 'baseline',    
       justifyContent: 'space-evenly'  
     }, 
-    fab: {
-      margin: 0,
-      top: 'auto',
-      right: 20,
-      bottom: 20,
-      left: 'auto',
-      position: 'fixed',
+    spacedDivider: {
+      marginTop: 20,
+      marginBottom: 20
     },
     grow : {
         flexGrow: 1,
         },
-        sectionMobile: {
-          display: 'flex',
-          [theme.breakpoints.up('md')]: {
-            display: 'none',
-          },
-        },
-        sectionDesktop: {
-          display: 'none',
-          [theme.breakpoints.up('md')]: {
-            display: 'flex',
-          },
-      } 
+    sectionMobile: {
+      display: 'flex',
+      [theme.breakpoints.up('md')]: {
+        display: 'none',
+      },
+    },
+    sectionDesktop: {
+      display: 'none',
+      [theme.breakpoints.up('md')]: {
+        display: 'flex',
+      },
+    },
+    formElement: {
+      marginTop: 10,
+      marginBottom: 15
+    },
+    fab: {
+      position: 'absolute',
+      bottom: theme.spacing(2),
+      right: theme.spacing(2),
+    },
+    fabGreen: {
+      color: theme.palette.common.white,
+      backgroundColor: green[500],
+      '&:hover': {
+        backgroundColor: green[600],
+      },
+    },
+    nodeBody: {
+      marginTop: 25,
+      marginBottom: 15
+    },
+    speedDial: {
+      position: 'absolute',
+      bottom: theme.spacing(2),
+      right: theme.spacing(2),
+    }
   }
 );
 

@@ -10,8 +10,6 @@ import { adminStyles } from '../../../styles/styles';
 
 import { properties } from '../../../properties'; 
 
-import ConfirmDialog from './ConfirmDialog';
-
 class SimpleList extends React.Component {
 
 	constructor(props) {
@@ -63,7 +61,7 @@ class SimpleList extends React.Component {
 					
 					<Content 
 							actions={actions} 
-							items={this.state.items} 
+							items={items} 
 							refresh={this.retrieveData} 
 							itemUpdate={handleEdit} />	
 				</Table>

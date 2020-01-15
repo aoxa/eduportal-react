@@ -21,6 +21,9 @@ export default function GroupList() {
 
 						const response = await axios.delete(properties.server + "groups/" +id);
 						
+						if( response.statue !== 200) {
+							return {result: false, message: 'Error tratndo de borrar el grupo'};
+						}
 						callback();
 						
 						return {result: true, message: ''};

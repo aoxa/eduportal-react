@@ -25,6 +25,9 @@ export default function RoleList() {
 
 					const response = await axios.delete(properties.server + "roles/" +id);
 					
+					if(response.status !== 200) {
+						return {result: false, message: 'Error intentando borrar el rol'};	
+					}
 					callback();
 					
 					return {result: true, message: ''};

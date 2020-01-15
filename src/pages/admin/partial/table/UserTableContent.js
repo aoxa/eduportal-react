@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { properties } from '../../../../properties';
-import ConfirmDialog from '../ConfirmDialog';
 
 import { Link as RouterLink } from 'react-router-dom';
 
@@ -13,7 +12,6 @@ import IconButton from '@material-ui/core/IconButton';
 import EditIcon from '@material-ui/icons/Edit';
 import LockIcon from '@material-ui/icons/Lock';
 import LockOpenIcon from '@material-ui/icons/LockOpen';
-import DeleteIcon from '@material-ui/icons/Delete';
 
 
 export function TableHeader() {
@@ -34,7 +32,7 @@ export function TableHeader() {
 export const TableContent = (props) =>  {
 
 	
-	const { items, refresh } = props;
+	const { items } = props;
 
 	return (
 		<React.Fragment>

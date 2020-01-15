@@ -7,8 +7,6 @@ import Button from '@material-ui/core/Button';
 import Snackbar from '@material-ui/core/Snackbar';
 import Alert from '@material-ui/lab/Alert';	
 
-import { makeStyles } from '@material-ui/core/styles';
-import { adminStyles } from '../../../styles/styles';
 import { properties } from '../../../properties'; 
 
 

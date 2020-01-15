@@ -2,7 +2,6 @@ import React from 'react';
 import SimpleList from './SimpleList';
 import { TableHeader, TableContent } from './table/UserTableContent';
 import DeleteIcon from '@material-ui/icons/Delete';
-import LockIcon from '@material-ui/icons/Lock';
 import { properties } from '../../../properties'; 
 
 import axios from 'axios';
@@ -21,7 +20,9 @@ export default function UserList() {
 						if(!id) return {result: false};
 
 						const response = await axios.delete(properties.server + "users/" +id);
-						
+						if( 200 !== response.status) {
+							return {result: false, message: 'Error borrando el usuario'};	
+						}
 						callback();
 						
 						return {result: true, message: ''};
