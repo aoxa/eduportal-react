@@ -61,7 +61,7 @@ function Course(props) {
 			<Grid container>
 				<Grid item xs={8}>
 					<Paper className={classes.paper} elevation={5}>
-						<Typography variant="h6">Courses</Typography>
+						<Typography variant="h6">Asignaturas</Typography>
 						{ articles.data && articles.data.map( (value, key)=>{
 							return (
 								<div key={key}>

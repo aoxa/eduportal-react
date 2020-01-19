@@ -48,6 +48,11 @@ export const styles = (theme) => (
       marginTop: 10,
       marginBottom: 15
     },
+    formControl: {
+      marginRight: theme.spacing(1),
+      marginLeft: theme.spacing(1),
+      minWidth: 120,
+    },
     fab: {
       position: 'absolute',
       bottom: theme.spacing(2),
@@ -68,6 +73,10 @@ export const styles = (theme) => (
       position: 'absolute',
       bottom: theme.spacing(2),
       right: theme.spacing(2),
+    },
+    surveyFormControl: {
+      marginTop: 16,
+      marginLeft: 4
     }
   }
 );
