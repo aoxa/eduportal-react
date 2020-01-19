@@ -152,8 +152,9 @@ const RenderCheckboxFragment = (props) => {
 };
 
 const RenderRadioFragment = (props) => {
-	const { item, name, handleOptionChange, handleValueChange } = props;
+	const { item, name, handleOptionChange, handleValueChange, handleDelete } = props;
 	const groupName = name + "-group";
+	const elementId = name.replace("element-","");
 	const classes = makeStyles(styles)();
 
 	return (
@@ -166,7 +167,12 @@ const RenderRadioFragment = (props) => {
 					return(
 						<React.Fragment key={idx}>
 							<Grid container> 
-								<Grid item sm={12} md={6}>
+							<Grid item sm={2}>
+									<IconButton className={classes.surveyFormControl} 
+										onClick={()=>handleDelete(elementId, idx)}><DeleteIcon />
+									</IconButton> 
+								</Grid>
+								<Grid item sm={10} md={5}>
 									<TextField name={valueName}
 										id={valueName}
 										label="Valor de la Opcion"
@@ -175,7 +181,7 @@ const RenderRadioFragment = (props) => {
 										fullWidth
 										/>
 								</Grid>
-								<Grid item sm={12} md={6}>
+								<Grid item sm={12} md={5}>
 									<FormControlLabel 
 										className={classes.surveyFormControl}
 										value={val.option.replace(/ /g, "_")} 
@@ -203,8 +209,6 @@ const RenderSelectFragment = (props) => {
 	const update = (e) => {
 		setValueName(e.target.value) ;
 	}
-
-	console.log(props)
 
 	return (
 		<React.Fragment>
@@ -251,9 +255,8 @@ const RenderOption = (props) => {
 			<RenderCheckboxFragment {...props} />
 		);
 	} else if(props.type === "select" || props.type === "select-multi") {
-		const multiline = props.type === "select-multi";
 		return (
-			<RenderSelectFragment {...props} multiline={multiline} />
+			<RenderSelectFragment {...props} multiline={props.type === "select-multi"} />
 		)
 	}
 
@@ -271,7 +274,7 @@ function Survey(props) {
 	const [ item, setItem ] = useState({...blankItem});	
 	const [ items, setItems ] = useState([]);
 	
-	function handleChange(event) {
+	const handleChange = (event) => {
 		const updatedItems = [...items];
 
 		const idx = event.target.id.substring(event.target.id.indexOf("-")+1);
@@ -282,7 +285,7 @@ function Survey(props) {
 		setItems(updatedItems);
 	}
 
-	function handleDelete(elementId, optionId) {
+	const handleDelete = (elementId, optionId) => {
 		const copy = [...items];
 
 		copy[elementId].value.splice(optionId, 1);
@@ -290,7 +293,7 @@ function Survey(props) {
 		setItems(copy);
 	}
 
-	function handleValueChange(itemID, optionID, target) {
+	const handleValueChange = (itemID, optionID) => {
 		const copy = [...items];
 		
 		if(copy[itemID].type === "checkbox") {
@@ -303,7 +306,7 @@ function Survey(props) {
 		setItems(copy);				
 	}
 
-	function addElement() {
+	const addElement = () => {
 		const element = {...item};
 		
 		element.type = item.type;
@@ -331,14 +334,14 @@ function Survey(props) {
 		setSurvey(copy);
 	}
 
-	function addOption(idx) {
+	const addOption = (idx) => {
 		const updatedItems = [...items];
 		updatedItems[idx].value.push({...blankValue});
 
 		setItems(updatedItems);
 	}
 
-	function handleOptionChange(event) {
+	const handleOptionChange = (event) => {
 		let idSections = event.target.id.split("-");
 		let idOption = idSections[idSections.length - 1];
 		let idElement = idSections[idSections.length -2];
