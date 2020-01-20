@@ -18,12 +18,18 @@ import AddCircleOutlineIcon from '@material-ui/icons/AddCircleOutline';
 import Divider from '@material-ui/core/Divider';
 
 import DeleteIcon from '@material-ui/icons/Delete';
+import Snackbar from '@material-ui/core/Snackbar';
+import Alert from '@material-ui/lab/Alert';
+import { MuiPickersUtilsProvider,DatePicker } from '@material-ui/pickers';
+import DateFnsUtils from '@date-io/date-fns';
 
 const SurveyGeneral = (props) => {
-	const { survey, handleSurvey } = props;
+	const { survey, handleSurvey, handleDateChange } = props;
+	const minDate = new Date();
+	minDate.setDate(minDate.getDate() + 4);
 
 	return (
-		<React.Fragment>
+		<MuiPickersUtilsProvider utils={DateFnsUtils}>
 			<TextField 
 				type='text'
 				name="title"
@@ -32,6 +38,10 @@ const SurveyGeneral = (props) => {
 				onChange={handleSurvey} 
 				margin='normal' />
 
+			<DatePicker value={survey.expiryDate} 
+				minDate={minDate}
+				format="dd/MM/yyyy"
+				onChange={handleDateChange} />
 		
 			<TextField 	
 				type='text'
@@ -43,7 +53,7 @@ const SurveyGeneral = (props) => {
 				value={survey.description} 
 				onChange={handleSurvey} 
 				margin='normal' />
-		</React.Fragment>
+		</MuiPickersUtilsProvider>
 		);	
 }
 
@@ -269,10 +279,14 @@ function Survey(props) {
 	const classes = makeStyles(styles)();
 	const blankItem = {type: "text", title: "", tip:"", value:[]};
 	const blankValue = {name:"", option: "", selected: false};
+	
+	const expDate = new Date();
+	expDate.setDate(expDate.getDate() + 4);
 
-	const [ survey, setSurvey] = useState({ title: "", description: "" });	
+	const [ survey, setSurvey] = useState({ title: "", description: "", expiryDate: expDate });	
 	const [ item, setItem ] = useState({...blankItem});	
 	const [ items, setItems ] = useState([]);
+	const [ snackbar, setSnackbar ] = useState(false);
 	
 	const handleChange = (event) => {
 		const updatedItems = [...items];
@@ -286,12 +300,15 @@ function Survey(props) {
 	}
 
 	const handleDelete = (elementId, optionId) => {
+		if(items[elementId].value.length < 3) {
+			setSnackbar(true);
+			return;			
+		}
+
 		const copy = [...items];
 		const valueCopy = [...items[elementId].value];
 
-		console.log(valueCopy, elementId, optionId);
-
-		console.log(valueCopy.splice(optionId, 1));
+		valueCopy.splice(optionId, 1);
 
 		copy[elementId].value = valueCopy;
 
@@ -318,7 +335,10 @@ function Survey(props) {
 		element.title = item.title;
 		element.tip = item.tip;
 
-		if( item.type !== 'text') element.value.push({...blankValue});
+		if( item.type === 'radio' || item.type === 'checkbox') {
+			element.value.push({...blankValue});
+			element.value.push({...blankValue});
+		}
 		
 		setItems([...items, element]);
 
@@ -336,6 +356,13 @@ function Survey(props) {
 		const copy = {...survey};
 		copy[e.target.name] = e.target.value;
 		
+		setSurvey(copy);
+	}
+
+	const handleDateChange = (e) => {
+		const copy = {...survey};
+		copy.expiryDate = e;
+
 		setSurvey(copy);
 	}
 
@@ -371,18 +398,16 @@ function Survey(props) {
 	}
 
 	return (
-		<Grid>
-
+		<React.Fragment>
 			<Paper className={classes.paper} elevation={5}>
 
-				<SurveyGeneral handleSurvey={ handleSurvey } survey={ survey } />
+				<SurveyGeneral handleSurvey={ handleSurvey } handleDateChange={handleDateChange} survey={ survey } />
 				
 				<Divider className={classes.spacedDivider} />
 
 				<SurveyAddElement handle={handle} addElement={addElement} item={item} />
 
 				<div>
-
 
 				{items.map((item,idx)=>{
 					const titleId = "title-"+idx;
@@ -392,7 +417,9 @@ function Survey(props) {
 					return (
 						<Grid container key={idx}>
 							<Grid item md={1}>
-								<IconButton id={"delete-" + idx} onClick={handleDeleteItem}><DeleteIcon /></IconButton>
+								<IconButton id={"delete-" + idx} 
+									className={classes.surveyFormControl} 
+									onClick={handleDeleteItem}><DeleteIcon /></IconButton>
 							</Grid>
 							<Grid item md={3}>
 								<TextField name={titleId}
@@ -402,23 +429,28 @@ function Survey(props) {
 									label="Pregunta"
 									/>
 							</Grid>
-							<Grid item md={2}>
-								<TextField name={tipId}
-									value={item.tip}
-									id={tipId}
-									onChange={handleChange}
-									label="Informacion adicional"
-									/>
-								{(item.type === "radio" || item.type === "checkbox") && 
-								<FormControl>
-									<label></label>
-									<IconButton onClick={(e)=>addOption(idx)} 
-										className="MuiInput-formControl" 
-										color="secondary" aria-label="add">
-							        		<AddCircleOutlineIcon  />
-							      	</IconButton>
-						      	</FormControl>
-						      	}
+							<Grid item container md={2}>
+								<Grid item sm={10}>
+									<TextField name={tipId}
+										value={item.tip}
+										id={tipId}
+										onChange={handleChange}
+										label="Informacion adicional"
+										/>
+								</Grid>
+								<Grid item sm={2}>
+									{(item.type === "radio" || item.type === "checkbox") && 
+									<FormControl>
+										<label></label>
+										<IconButton onClick={(e)=>addOption(idx)} 
+											className="MuiInput-formControl" 
+											color="secondary" aria-label="add">
+												<AddCircleOutlineIcon  />
+										</IconButton>
+									</FormControl>
+									}
+								</Grid>
+																
 					      	</Grid>
 							<Grid item md={5}>
 								<RenderOption 
@@ -434,10 +466,14 @@ function Survey(props) {
 						)
 				})}
 				</div>
+				
 			</Paper>
-
+			<Snackbar anchorOrigin={{ vertical: 'top', horizontal: 'center' }} open={snackbar} onClose={()=>setSnackbar(false)} 
+						autoHideDuration={3000}>  
+            	<Alert severity="error">Tienen que haber al menos dos opciones</Alert>
+	        </Snackbar>
 		
-		</Grid>
+		</React.Fragment>
 		);
 } 
 
