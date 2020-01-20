@@ -22,26 +22,41 @@ import Snackbar from '@material-ui/core/Snackbar';
 import Alert from '@material-ui/lab/Alert';
 import { MuiPickersUtilsProvider,DatePicker } from '@material-ui/pickers';
 import DateFnsUtils from '@date-io/date-fns';
+import Button from '@material-ui/core/Button';
+import Box from '@material-ui/core/Box';
 
 const SurveyGeneral = (props) => {
 	const { survey, handleSurvey, handleDateChange } = props;
 	const minDate = new Date();
+	const maxDate = new Date();
 	minDate.setDate(minDate.getDate() + 4);
+	maxDate.setDate(maxDate.getDate() + 63);
+
+	const classes = makeStyles(styles)();
 
 	return (
 		<MuiPickersUtilsProvider utils={DateFnsUtils}>
-			<TextField 
-				type='text'
-				name="title"
-				label='Titulo del cuestionario' 
-				value={survey.title} 
-				onChange={handleSurvey} 
-				margin='normal' />
+			<Box display="flex">
+				<TextField 
+					type='text'
+					name="title"
+					label='Titulo del cuestionario' 
+					value={survey.title} 
+					onChange={handleSurvey} 
+					margin='normal' />
 
-			<DatePicker value={survey.expiryDate} 
-				minDate={minDate}
-				format="dd/MM/yyyy"
-				onChange={handleDateChange} />
+				<div className={classes.grow}></div>
+
+				<DatePicker 
+					className="MuiFormControl-marginNormal" 
+					value={survey.expiryDate} 
+					label="Fecha de finalizacion"
+					minDate={minDate}
+					maxDate={maxDate}
+					format="dd/MM/yyyy"
+					onChange={handleDateChange} />
+
+			</Box>			
 		
 			<TextField 	
 				type='text'
@@ -467,12 +482,13 @@ function Survey(props) {
 				})}
 				</div>
 				
+				<Button >Guardar</Button>
 			</Paper>
 			<Snackbar anchorOrigin={{ vertical: 'top', horizontal: 'center' }} open={snackbar} onClose={()=>setSnackbar(false)} 
 						autoHideDuration={3000}>  
             	<Alert severity="error">Tienen que haber al menos dos opciones</Alert>
 	        </Snackbar>
-		
+				
 		</React.Fragment>
 		);
 } 
