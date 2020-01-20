@@ -128,7 +128,7 @@ const RenderCheckboxFragment = (props) => {
 									<TextField name={valueName}
 										id={valueName}
 										label="Valor de la Opcion"
-										defaultValue={val.option}
+										value={val.option}
 										onChange={handleOptionChange}
 										fullWidth
 										/>
@@ -176,7 +176,7 @@ const RenderRadioFragment = (props) => {
 									<TextField name={valueName}
 										id={valueName}
 										label="Valor de la Opcion"
-										defaultValue={val.option}
+										value={val.option}
 										onChange={handleOptionChange}
 										fullWidth
 										/>
@@ -287,8 +287,13 @@ function Survey(props) {
 
 	const handleDelete = (elementId, optionId) => {
 		const copy = [...items];
+		const valueCopy = [...items[elementId].value];
 
-		copy[elementId].value.splice(optionId, 1);
+		console.log(valueCopy, elementId, optionId);
+
+		console.log(valueCopy.splice(optionId, 1));
+
+		copy[elementId].value = valueCopy;
 
 		setItems(copy);
 	}
@@ -356,6 +361,15 @@ function Survey(props) {
 		setItems(updatedItems);
 	}
 
+	const handleDeleteItem = (e) => {
+		const itemNum = e.currentTarget.id.replace("delete-", "");
+		const copy = [...items];
+
+		copy.splice(itemNum, 1);
+
+		setItems(copy);
+	}
+
 	return (
 		<Grid>
 
@@ -377,6 +391,9 @@ function Survey(props) {
 
 					return (
 						<Grid container key={idx}>
+							<Grid item md={1}>
+								<IconButton id={"delete-" + idx} onClick={handleDeleteItem}><DeleteIcon /></IconButton>
+							</Grid>
 							<Grid item md={3}>
 								<TextField name={titleId}
 									value={item.title}
@@ -385,14 +402,14 @@ function Survey(props) {
 									label="Pregunta"
 									/>
 							</Grid>
-							<Grid item md={3}>
+							<Grid item md={2}>
 								<TextField name={tipId}
 									value={item.tip}
 									id={tipId}
 									onChange={handleChange}
 									label="Informacion adicional"
 									/>
-								{item.type !== "text" && 
+								{(item.type === "radio" || item.type === "checkbox") && 
 								<FormControl>
 									<label></label>
 									<IconButton onClick={(e)=>addOption(idx)} 
