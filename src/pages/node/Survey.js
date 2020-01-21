@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { styles } from "../../styles/styles"
 import Paper from '@material-ui/core/Paper';
@@ -16,6 +16,7 @@ import InputLabel from '@material-ui/core/InputLabel';
 import NativeSelect from '@material-ui/core/NativeSelect';
 import AddCircleOutlineIcon from '@material-ui/icons/AddCircleOutline';
 import Divider from '@material-ui/core/Divider';
+import CircularProgress from '@material-ui/core/CircularProgress';
 
 import DeleteIcon from '@material-ui/icons/Delete';
 import Snackbar from '@material-ui/core/Snackbar';
@@ -24,6 +25,13 @@ import { MuiPickersUtilsProvider,DatePicker } from '@material-ui/pickers';
 import DateFnsUtils from '@date-io/date-fns';
 import Button from '@material-ui/core/Button';
 import Box from '@material-ui/core/Box';
+import Input from '@material-ui/core/Input';
+import FormHelperText from '@material-ui/core/FormHelperText';
+import Typography from '@material-ui/core/Typography';
+import Axios from 'axios';
+import { properties } from '../../properties';
+
+import DisplayNodeHeaders from './partial/NodePartials';
 
 const SurveyGeneral = (props) => {
 	const { survey, handleSurvey, handleDateChange } = props;
@@ -37,14 +45,16 @@ const SurveyGeneral = (props) => {
 	return (
 		<MuiPickersUtilsProvider utils={DateFnsUtils}>
 			<Box display="flex">
-				<TextField 
-					type='text'
-					name="title"
-					label='Titulo del cuestionario' 
-					value={survey.title} 
-					onChange={handleSurvey} 
-					margin='normal' />
-
+				<FormControl className="MuiFormControl-marginNormal" error={survey.title.length === 0} >
+					<InputLabel>Titulo del cuestionario</InputLabel>
+					<Input 
+						name="title"
+						value={survey.title} 
+						onChange={handleSurvey} 
+						 />
+						{ survey.title.length === 0 && 
+							<FormHelperText >Este campo es requerido</FormHelperText> }
+				</FormControl>
 				<div className={classes.grow}></div>
 
 				<DatePicker 
@@ -58,16 +68,24 @@ const SurveyGeneral = (props) => {
 
 			</Box>			
 		
-			<TextField 	
-				type='text'
-				name='description'
-				fullWidth
-				multiline
-				rows={4} 
-				label='Descripcion' 
-				value={survey.description} 
-				onChange={handleSurvey} 
-				margin='normal' />
+			<FormControl 
+					fullWidth
+					className="MuiFormControl-marginNormal" 
+					error={survey.description.length === 0} >
+				<InputLabel>Descripcion</InputLabel>
+				
+				<Input 	
+					type='text'
+					name='description'
+					fullWidth
+					multiline
+					rows={4}  
+					value={survey.description} 
+					onChange={handleSurvey} 
+					 />
+					{survey.description.length === 0 &&
+						<FormHelperText>Este campo es requerido</FormHelperText> }
+			</FormControl>
 		</MuiPickersUtilsProvider>
 		);	
 }
@@ -79,18 +97,7 @@ const SurveyAddElement = (props) => {
 
 	return (
 		<Grid container>			
-			<Grid item md={4}>
-				<TextField
-					fullWidth
-					value={item.title}
-					name="title"
-					type="text"
-					onChange={handle}
-					label="Pregunta"
-					id="itemTitle"
-					/>
-			</Grid>
-			<Grid item md={4}>
+			<Grid item md={12}>
 				<FormControl className={classes.formControl}>
 			        <InputLabel htmlFor='itemType'>Tipo de campo</InputLabel>
 			        <NativeSelect
@@ -106,16 +113,6 @@ const SurveyAddElement = (props) => {
 			        	<option value="select-multi">Opcion multiple desplegable</option>
 		        	</NativeSelect>
 		        </FormControl>
-	        </Grid>
-	        <Grid item md={4}>
-				<TextField 
-		        	name="tip"
-					value={item.tip}
-					type="text"
-					onChange={handle}
-					label="Informacion adicional"
-					id="tipId"
-					/>
 				<FormControl>
 					<label></label>
 					<IconButton onClick={addElement} className="MuiInput-formControl" color="primary" aria-label="add">
@@ -137,7 +134,7 @@ const RenderCheckboxFragment = (props) => {
 		<React.Fragment >
 			<FormGroup aria-label={item.title} name={groupName} value={item.selected} >
 			
-				{item.value.map((val, idx)=>{
+				{item.values.map((val, idx)=>{
 					const valueName = "option-" + name + "-" +idx;
 					
 					return(
@@ -150,13 +147,17 @@ const RenderCheckboxFragment = (props) => {
 									</IconButton> 
 								</Grid>
 								<Grid item sm={10} md={5}>
-									<TextField name={valueName}
-										id={valueName}
-										label="Valor de la Opcion"
-										value={val.option}
-										onChange={handleOptionChange}
-										fullWidth
-										/>
+									<FormControl error={val.option.length === 0}>
+										<InputLabel>Valor de la Opcion</InputLabel>
+										<Input 
+											name={valueName}
+											id={valueName}
+											value={val.option}
+											onChange={handleOptionChange}
+											fullWidth
+											>
+										</Input>
+									</FormControl>
 								</Grid>
 								<Grid item sm={12} md={5}>
 									<FormControlLabel 
@@ -186,7 +187,7 @@ const RenderRadioFragment = (props) => {
 		<React.Fragment >
     	    <RadioGroup aria-label={item.title} name={groupName} value={item.selected} >
 			
-				{item.value.map((val, idx)=>{
+				{item.values.map((val, idx)=>{
 					const valueName = "option-" + name + "-" +idx;
 					
 					return(
@@ -225,7 +226,8 @@ const RenderRadioFragment = (props) => {
 };
 
 const RenderSelectFragment = (props) => {
-	const { item, multiline } = props;
+	//TODO: Handle this update.
+	const { item, name, multiline, handleOptionChange } = props;
 
 	const [valueName, setValueName] = useState("");
 
@@ -247,15 +249,17 @@ const RenderSelectFragment = (props) => {
 				</Grid>
 				<Grid item sm={12} md={6}>
 				<Select
+					id={"option-" + name + "-0"}
 					multiple={multiline}
 					native
 					className={classes.surveyFormControl}
 					fullWidth
+					onChange={handleOptionChange}
 					>	
 						{ 
 							valueName.split(',').map( (val, key) => {
-								if(!item.value[key]) item.value[key] = {};
-								item.value[key].option = val;
+								if(!item.values[key]) item.values[key] = {};
+								item.values[key].option = val;
 
 								return (
 									<option key={key} value={val}>{val}</option> 
@@ -288,11 +292,117 @@ const RenderOption = (props) => {
 	return null
 }
 
+export const ViewSurvey = (props) => {
+	const [ data, setData ] = useState({loading:true});
+	const [ reply, setReply ] = useState([]);
+	const classes = makeStyles(styles)();
+
+	useEffect(() => {
+		if(data.loading) {
+			Axios.get(properties.server + "surveys/"+props.match.params.id)
+			.then(result=>{
+				setData({loading: false, survey: result.data});
+				const blankReply = {items: []};
+				result.data.elements.map((element, id) => blankReply.items.push({name: element.name}));
+				setReply(blankReply);
+			});
+		}	
+	  });
+
+	const RenderLoading = () => {
+		return (
+			<Paper className={classes.paper}>
+				<CircularProgress />
+			</Paper>
+		)
+	}
+
+	function Options({element}) {
+		if(element.radioButton) {
+			return (<RenderRadio element={element} />)
+		}
+		if(element.checkBox) {
+			return (<RenderCheckbox element={element} />)
+		}
+
+		return (<RenderSelect element={element} />)
+	}
+
+	const RenderElement = (props) => {
+		const {element} = props;
+
+		return (
+			<Grid container>
+				<Grid item sm={5} >
+					<Typography variant="body1">{element.title}</Typography>
+				</Grid>
+				<Grid item sm={7}>
+					<Options element={element} />
+				</Grid>
+			</Grid>
+		)		
+	}
+
+	const RenderRadio = (option) => {
+
+		return (
+			<RadioGroup name="option" value="{value}" >
+			<FormControlLabel value="female" control={<Radio />} label="Female" />
+			<FormControlLabel value="male" control={<Radio />} label="Male" />
+			<FormControlLabel value="other" control={<Radio />} label="Other" />
+			<FormControlLabel
+			  value="disabled"
+			  disabled
+			  control={<Radio />}
+			  label="(Disabled option)"
+			/>
+		  </RadioGroup>
+			)
+	}
+	
+	const RenderCheckbox = ({element}) => {
+		return(
+			<FormGroup>
+				{element.options.map((option, idx)=>{
+					return (<FormControlLabel
+						key={idx}
+						control={<Checkbox checked={false} value={option.value} />}
+						label={option.value}
+					/>)
+				})}
+			</FormGroup>
+		)
+
+	}
+
+	const RenderSelect = (option) => {
+		return null
+	}
+
+	if(data.loading) {
+		return (<RenderLoading />)
+	}
+
+	const { survey } = data;
+
+	return (
+		<Paper className={classes.paper}>
+			<DisplayNodeHeaders title={survey.title} userId="id" /> 
+			<Typography variant="body1" className={classes.nodeBody}>{survey.description}</Typography>
+			{survey.elements.map((element, idx) => {
+				return (
+					<RenderElement key={idx} element={element} />						
+				)
+			})}		
+		</Paper>
+	)		
+}
+
 //TODO: Agregar WYSIWYG
 
 function Survey(props) {
 	const classes = makeStyles(styles)();
-	const blankItem = {type: "text", title: "", tip:"", value:[]};
+	const blankItem = {type: "text", name: "", title: "", tip:"", values:[]};
 	const blankValue = {name:"", option: "", selected: false};
 	
 	const expDate = new Date();
@@ -305,27 +415,30 @@ function Survey(props) {
 	
 	const handleChange = (event) => {
 		const updatedItems = [...items];
+		const { id, value } = event.target;
 
-		const idx = event.target.id.substring(event.target.id.indexOf("-")+1);
-		const name = event.target.id.substring(0, event.target.id.indexOf("-"));
+		const idx = id.substring(id.indexOf("-")+1);
+		const name = id.substring(0, id.indexOf("-"));
 		
-		updatedItems[idx][name] = event.target.value;
+		updatedItems[idx][name] = value;
+		
+		updatedItems[idx].name = "element-" + idx;
 		
 		setItems(updatedItems);
 	}
 
 	const handleDelete = (elementId, optionId) => {
-		if(items[elementId].value.length < 3) {
+		if(items[elementId].values.length < 3) {
 			setSnackbar(true);
 			return;			
 		}
 
 		const copy = [...items];
-		const valueCopy = [...items[elementId].value];
+		const valueCopy = [...items[elementId].values];
 
 		valueCopy.splice(optionId, 1);
 
-		copy[elementId].value = valueCopy;
+		copy[elementId].values = valueCopy;
 
 		setItems(copy);
 	}
@@ -334,10 +447,10 @@ function Survey(props) {
 		const copy = [...items];
 		
 		if(copy[itemID].type === "checkbox") {
-			copy[itemID].value[optionID].selected= !copy[itemID].value[optionID].selected;	
+			copy[itemID].values[optionID].selected= !copy[itemID].values[optionID].selected;	
 		} else {
-			copy[itemID].value.map((value) => value.selected= false);
-			copy[itemID].value[optionID].selected= true;	
+			copy[itemID].values.map((value) => value.selected= false);
+			copy[itemID].values[optionID].selected= true;	
 		}		
 		
 		setItems(copy);				
@@ -347,12 +460,10 @@ function Survey(props) {
 		const element = {...item};
 		
 		element.type = item.type;
-		element.title = item.title;
-		element.tip = item.tip;
-
+		
 		if( item.type === 'radio' || item.type === 'checkbox') {
-			element.value.push({...blankValue});
-			element.value.push({...blankValue});
+			element.values.push({...blankValue});
+			element.values.push({...blankValue});
 		}
 		
 		setItems([...items, element]);
@@ -383,7 +494,7 @@ function Survey(props) {
 
 	const addOption = (idx) => {
 		const updatedItems = [...items];
-		updatedItems[idx].value.push({...blankValue});
+		updatedItems[idx].values.push({...blankValue});
 
 		setItems(updatedItems);
 	}
@@ -395,10 +506,11 @@ function Survey(props) {
 		let name = idSections[0];
 
 		const updatedItems = [...items];
+		console.log(updatedItems, idElement);
 
-		updatedItems[idElement].value[idOption][name] = event.target.value;
+		updatedItems[idElement].values[idOption][name] = event.target.value;
 		
-		updatedItems[idElement].value[idOption].name = event.target.id;
+		updatedItems[idElement].values[idOption].name = event.target.id;
 
 		setItems(updatedItems);
 	}
@@ -410,6 +522,50 @@ function Survey(props) {
 		copy.splice(itemNum, 1);
 
 		setItems(copy);
+	}
+
+	const validateSubmit = () => {
+		let invalid = false;
+		invalid |= survey.title.trim().length === 0;
+		invalid |= survey.description.trim().length === 0;
+
+		if(items.length === 0) return false;
+
+		for(let i = 0; i < items.length; i++) {
+			const item = items[i];
+			invalid |= item.title.trim().length === 0
+			if(item.type === "radio" || item.type === "checkbox") {
+				let selected = false;
+
+				for(let j = 0; j < item.values.length; j++) {
+					let value = item.values[j];
+					invalid |= value.option.trim().length === 0;
+					selected |= value.selected;
+				}
+
+				invalid |= (item.type === "radio" && !selected);
+			}
+		}
+
+		return !invalid;
+	}
+
+	const handleSubmit = () => {
+		if(!validateSubmit()) {
+
+		}
+
+		Axios.post(properties.server + 'surveys/',
+			{
+				title: survey.title,
+				description: survey.description,
+				expiry: survey.expiryDate,
+				elements: [...items]
+			}
+		)
+			.then((result) => {
+				console.log(result);
+			});
 	}
 
 	return (
@@ -482,7 +638,7 @@ function Survey(props) {
 				})}
 				</div>
 				
-				<Button >Guardar</Button>
+				<Button onClick={handleSubmit}>Guardar</Button>
 			</Paper>
 			<Snackbar anchorOrigin={{ vertical: 'top', horizontal: 'center' }} open={snackbar} onClose={()=>setSnackbar(false)} 
 						autoHideDuration={3000}>  

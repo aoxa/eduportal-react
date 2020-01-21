@@ -22,7 +22,7 @@ const actions = [
 ];
 
 function Course(props) {
-	const [ articles, setArticles ] = useState({data: [], loaded: false})
+	const [ nodes, setNodes ] = useState({data: [], loaded: false})
 	const [ speedDial, setSpeedDial ] = useState({ open: false })
 	const { classes } = props;
 
@@ -30,13 +30,13 @@ function Course(props) {
 		const source = axios.CancelToken.source();
 		(async () => {
 			try {
-				if(articles.loaded) return;
+				if(nodes.loaded) return;
 
-				const response = await axios.get(properties.server + "articles", {
+				const response = await axios.get(properties.server + "nodes", {
 													        cancelToken: source.token
 												      });
 
-				setArticles({ data: response.data, loaded: true });
+				setNodes({ data: response.data, loaded: true });
 				
 				} catch (error) {
 			      if (axios.isCancel(error)) {
@@ -62,10 +62,10 @@ function Course(props) {
 				<Grid item xs={8}>
 					<Paper className={classes.paper} elevation={5}>
 						<Typography variant="h6">Asignaturas</Typography>
-						{ articles.data && articles.data.map( (value, key)=>{
+						{ nodes.data && nodes.data.map( (value, key)=>{
 							return (
-								<div key={key}>
-									<RouterLink to={ "/article/"+value.id }>{value.title}</RouterLink>
+								<div key={key}>									
+									<RouterLink to={ "/"+value.type+"/"+value.id }>{value.title}</RouterLink>
 								</div>
 								)
 						} ) }

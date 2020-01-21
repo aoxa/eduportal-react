@@ -19,18 +19,7 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogActions from '@material-ui/core/DialogActions';
 import Divider from '@material-ui/core/Divider';
 
-const DisplayNodeHeader = (props) => {
-
-	const { userId, title } = props;
-	const [ user, setUser ] = useState({id: '076aa244-3685-11ea-aec2-2e728ce88125', username: 'aoxa', firstName: 'Pepe', lastName: 'Trueno'});
-	
-	return (
-			<React.Fragment>
-				<Typography variant="h4">{title}</Typography>
-				<Typography variant="subtitle2" gutterBottom>{user? "Publicado $ por " + user.username : "cargando" }</Typography>
-			</React.Fragment>
-		);
-};
+import DisplayNodeHeader from './partial/NodePartials';
 
 const DisplayComments = (props) => {
 	const { children } = props.article; 
