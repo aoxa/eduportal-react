@@ -32,6 +32,7 @@ import Axios from 'axios';
 import { properties } from '../../properties';
 
 import DisplayNodeHeaders from './partial/NodePartials';
+import { checkPropTypes } from 'prop-types';
 
 const SurveyGeneral = (props) => {
 	const { survey, handleSurvey, handleDateChange } = props;
@@ -212,7 +213,7 @@ const RenderRadioFragment = (props) => {
 										className={classes.surveyFormControl}
 										value={val.option.replace(/ /g, "_")} 
 										control={<Radio id={"optionid-"+idx} 
-										onChange={(e)=>handleValueChange(name.replace("element-",""), idx, e.target)} />} 
+										onChange={(e)=>handleValueChange(elementId, idx)} />} 
 										label={val.option} 
 										/>
 								</Grid>
@@ -227,7 +228,8 @@ const RenderRadioFragment = (props) => {
 
 const RenderSelectFragment = (props) => {
 	//TODO: Handle this update.
-	const { item, name, multiline, handleOptionChange } = props;
+	const { item, name, multiline, handleValueChange } = props;
+	const elementId = name.replace("element-","");
 
 	const [valueName, setValueName] = useState("");
 
@@ -254,7 +256,7 @@ const RenderSelectFragment = (props) => {
 					native
 					className={classes.surveyFormControl}
 					fullWidth
-					onChange={handleOptionChange}
+					onChange={(e)=>handleValueChange(elementId, e.target.selectedIndex, e.target)}
 					>	
 						{ 
 							valueName.split(',').map( (val, key) => {
@@ -292,22 +294,152 @@ const RenderOption = (props) => {
 	return null
 }
 
+function Options(props) {
+	const {element, handleItemChange, reply} = props;
+	const id = element.name.replace("element-", "");
+
+	if( element.type === null) {		
+		return (<Input name={element.name} onChange={handleItemChange} value={reply.items[id].value}>{element.title}</Input>)
+	} 
+	if(element.radioButton) {
+		return (<RenderRadio {...props} />)
+	}
+	if(element.checkBox) {
+		return (<RenderCheckbox {...props} />)
+	}
+
+	return (<RenderSelect {...props} />)
+}
+
+const RenderElement = (props) => {
+	const {reply, element} = props;
+
+	return (
+		<Grid container>
+			<Grid item sm={5} >
+				<Typography variant="body1">{element.title}</Typography>
+			</Grid>
+			<Grid item sm={7}>
+				<Options {...props} />
+			</Grid>
+		</Grid>
+	)		
+}
+
+const RenderRadio = (props) => {
+	const {reply, element, handleItemChange} = props;
+	const id = element.name.replace("element-", "");
+
+	const  value = reply.items[id].value;
+
+	return (
+		<RadioGroup name={element.name} value={value} onChange={handleItemChange}>
+			{element.options.map((option, idx)=> <FormControlLabel key={idx} value={option.value} control={<Radio />} label={option.value} />
+			)}				
+		</RadioGroup>
+		)
+}
+
+const RenderCheckbox = (props) => {
+	const {reply, element, handleCBChange} = props;
+	const id = element.name.replace("element-", "");
+
+	let  values = reply.items[id].values;
+
+	return(
+		<FormGroup>
+			{element.options.map((option, idx)=>{
+				return (<FormControlLabel
+					key={idx}
+					onChange={()=>handleCBChange(id, idx)}
+					control={<Checkbox checked={values[idx]} value={option.value} />}
+					label={option.value}
+				/>)
+			})}
+		</FormGroup>
+	)
+
+}
+
+const RenderSelect = (props) => {
+	const {reply, element, handleSelect} = props;
+	const id = element.name.replace("element-", "");
+
+	let values = reply.items[id].values;
+
+	const isMultivalued = true == element.multivalued;
+
+	if(!isMultivalued) values = reply.items[id].values[0];
+	
+	return (
+		<Select
+				value={values}
+				name={element.name}
+				id={element.name}
+				multiple={isMultivalued}
+				native
+				onChange={handleSelect}
+			>	
+				{element.options.map((option, idx) =>
+					<option key={idx} value={option.value}>{option.value}</option>
+				)}
+			</Select>
+	)
+}
+
 export const ViewSurvey = (props) => {
 	const [ data, setData ] = useState({loading:true});
-	const [ reply, setReply ] = useState([]);
+	const [ reply, setReply ] = useState({});
 	const classes = makeStyles(styles)();
 
 	useEffect(() => {
 		if(data.loading) {
 			Axios.get(properties.server + "surveys/"+props.match.params.id)
 			.then(result=>{
-				setData({loading: false, survey: result.data});
-				const blankReply = {items: []};
-				result.data.elements.map((element, id) => blankReply.items.push({name: element.name}));
+				const blankReply = { items: [] };
+				result.data.elements.forEach((element, id) => blankReply.items.push({ name: element.name,  value:"", values:[] }));
 				setReply(blankReply);
+				setData({loading: false, survey: result.data});				
 			});
 		}	
 	  });
+
+	const handleItemChange = (e) => {
+		const { name, value } = e.target;
+
+		const copy = {...reply};
+
+		for(let i = 0; i < copy.items.length; i++) {
+			if(copy.items[i].name === name) {
+				copy.items[i].value = value;
+			}
+		}
+
+		setReply(copy);
+	}
+
+	const handleCBChange = (itemid, valueid) => {
+		const copy = {...reply};
+		copy.items[itemid].values[valueid] = !copy.items[itemid].values[valueid];
+
+		setReply(copy);
+	}
+
+	const handleSelect = ({target}) => {
+		const copy = {...reply};
+
+		copy.items.forEach((item, idx) => {
+			if(item.name === target.name) {
+				item.values=[];
+				target.childNodes.forEach((child) => {
+					if(child.selected) item.values.push(child.value);	
+				})
+				
+			}
+		});
+		
+		setReply(copy);
+	}
 
 	const RenderLoading = () => {
 		return (
@@ -317,67 +449,6 @@ export const ViewSurvey = (props) => {
 		)
 	}
 
-	function Options({element}) {
-		if(element.radioButton) {
-			return (<RenderRadio element={element} />)
-		}
-		if(element.checkBox) {
-			return (<RenderCheckbox element={element} />)
-		}
-
-		return (<RenderSelect element={element} />)
-	}
-
-	const RenderElement = (props) => {
-		const {element} = props;
-
-		return (
-			<Grid container>
-				<Grid item sm={5} >
-					<Typography variant="body1">{element.title}</Typography>
-				</Grid>
-				<Grid item sm={7}>
-					<Options element={element} />
-				</Grid>
-			</Grid>
-		)		
-	}
-
-	const RenderRadio = (option) => {
-
-		return (
-			<RadioGroup name="option" value="{value}" >
-			<FormControlLabel value="female" control={<Radio />} label="Female" />
-			<FormControlLabel value="male" control={<Radio />} label="Male" />
-			<FormControlLabel value="other" control={<Radio />} label="Other" />
-			<FormControlLabel
-			  value="disabled"
-			  disabled
-			  control={<Radio />}
-			  label="(Disabled option)"
-			/>
-		  </RadioGroup>
-			)
-	}
-	
-	const RenderCheckbox = ({element}) => {
-		return(
-			<FormGroup>
-				{element.options.map((option, idx)=>{
-					return (<FormControlLabel
-						key={idx}
-						control={<Checkbox checked={false} value={option.value} />}
-						label={option.value}
-					/>)
-				})}
-			</FormGroup>
-		)
-
-	}
-
-	const RenderSelect = (option) => {
-		return null
-	}
 
 	if(data.loading) {
 		return (<RenderLoading />)
@@ -391,7 +462,7 @@ export const ViewSurvey = (props) => {
 			<Typography variant="body1" className={classes.nodeBody}>{survey.description}</Typography>
 			{survey.elements.map((element, idx) => {
 				return (
-					<RenderElement key={idx} element={element} />						
+					<RenderElement key={idx} reply={reply} handleSelect={handleSelect} handleCBChange={handleCBChange} handleItemChange={handleItemChange} element={element} />						
 				)
 			})}		
 		</Paper>
@@ -443,14 +514,18 @@ function Survey(props) {
 		setItems(copy);
 	}
 
-	const handleValueChange = (itemID, optionID) => {
+	const handleValueChange = (itemID, optionID, target) => {
 		const copy = [...items];
 		
-		if(copy[itemID].type === "checkbox") {
+		if(copy[itemID].type === "checkbox" ) {
 			copy[itemID].values[optionID].selected= !copy[itemID].values[optionID].selected;	
-		} else {
+		} if(copy[itemID].type === "radio") {
 			copy[itemID].values.map((value) => value.selected= false);
 			copy[itemID].values[optionID].selected= true;	
+		} else {
+			target.childNodes.forEach((e,idx)=>{
+				copy[itemID].values[idx].selected = e.selected;
+			})
 		}		
 		
 		setItems(copy);				
@@ -506,7 +581,6 @@ function Survey(props) {
 		let name = idSections[0];
 
 		const updatedItems = [...items];
-		console.log(updatedItems, idElement);
 
 		updatedItems[idElement].values[idOption][name] = event.target.value;
 		
@@ -552,7 +626,7 @@ function Survey(props) {
 
 	const handleSubmit = () => {
 		if(!validateSubmit()) {
-
+			return
 		}
 
 		Axios.post(properties.server + 'surveys/',
