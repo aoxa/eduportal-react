@@ -31,8 +31,7 @@ import Typography from '@material-ui/core/Typography';
 import Axios from 'axios';
 import { properties } from '../../properties';
 
-import DisplayNodeHeaders from './partial/NodePartials';
-import { checkPropTypes } from 'prop-types';
+import DisplayNodeHeaders, { RenderElement } from './partial/NodePartials';
 
 const SurveyGeneral = (props) => {
 	const { survey, handleSurvey, handleDateChange } = props;
@@ -227,7 +226,6 @@ const RenderRadioFragment = (props) => {
 };
 
 const RenderSelectFragment = (props) => {
-	//TODO: Handle this update.
 	const { item, name, multiline, handleValueChange } = props;
 	const elementId = name.replace("element-","");
 
@@ -251,22 +249,20 @@ const RenderSelectFragment = (props) => {
 				</Grid>
 				<Grid item sm={12} md={6}>
 				<Select
-					id={"option-" + name + "-0"}
+					
 					multiple={multiline}
 					native
 					className={classes.surveyFormControl}
 					fullWidth
 					onChange={(e)=>handleValueChange(elementId, e.target.selectedIndex, e.target)}
 					>	
-						{ 
-							valueName.split(',').map( (val, key) => {
-								if(!item.values[key]) item.values[key] = {};
-								item.values[key].option = val;
+						{valueName.split(',').map( (val, key) => {
+							if(!item.values[key]) item.values[key] = {};
+							item.values[key].option = val;
 
-								return (
-									<option key={key} value={val}>{val}</option> 
-								)})
-						}
+							return (
+								<option id={"option-" + name + "-" + key} key={key} value={val}>{val}</option> 
+							)})}
 				</Select>
 				</Grid>
 			</Grid>
@@ -292,99 +288,6 @@ const RenderOption = (props) => {
 	}
 
 	return null
-}
-
-function Options(props) {
-	const {element, handleItemChange, reply} = props;
-	const id = element.name.replace("element-", "");
-
-	if( element.type === null) {		
-		return (<Input name={element.name} onChange={handleItemChange} value={reply.items[id].value}>{element.title}</Input>)
-	} 
-	if(element.radioButton) {
-		return (<RenderRadio {...props} />)
-	}
-	if(element.checkBox) {
-		return (<RenderCheckbox {...props} />)
-	}
-
-	return (<RenderSelect {...props} />)
-}
-
-const RenderElement = (props) => {
-	const {reply, element} = props;
-
-	return (
-		<Grid container>
-			<Grid item sm={5} >
-				<Typography variant="body1">{element.title}</Typography>
-			</Grid>
-			<Grid item sm={7}>
-				<Options {...props} />
-			</Grid>
-		</Grid>
-	)		
-}
-
-const RenderRadio = (props) => {
-	const {reply, element, handleItemChange} = props;
-	const id = element.name.replace("element-", "");
-
-	const  value = reply.items[id].value;
-
-	return (
-		<RadioGroup name={element.name} value={value} onChange={handleItemChange}>
-			{element.options.map((option, idx)=> <FormControlLabel key={idx} value={option.value} control={<Radio />} label={option.value} />
-			)}				
-		</RadioGroup>
-		)
-}
-
-const RenderCheckbox = (props) => {
-	const {reply, element, handleCBChange} = props;
-	const id = element.name.replace("element-", "");
-
-	let  values = reply.items[id].values;
-
-	return(
-		<FormGroup>
-			{element.options.map((option, idx)=>{
-				return (<FormControlLabel
-					key={idx}
-					onChange={()=>handleCBChange(id, idx)}
-					control={<Checkbox checked={values[idx]} value={option.value} />}
-					label={option.value}
-				/>)
-			})}
-		</FormGroup>
-	)
-
-}
-
-const RenderSelect = (props) => {
-	const {reply, element, handleSelect} = props;
-	const id = element.name.replace("element-", "");
-
-	let values = reply.items[id].values;
-
-	const isMultivalued = true == element.multivalued;
-
-	if(!isMultivalued) values = reply.items[id].values[0];
-	
-	return (
-		<Select
-				value={values}
-				name={element.name}
-				id={element.name}
-				multiple={isMultivalued}
-				native
-				onChange={handleSelect}
-			>	
-				{element.options.map((option, idx) =>
-					<option key={idx} value={option.value}>{option.value}</option>
-				)}
-			</Select>
-	)
 }
 
 export const ViewSurvey = (props) => {
@@ -456,13 +359,21 @@ export const ViewSurvey = (props) => {
 
 	const { survey } = data;
 
+	const params = {
+		reply: reply,
+		handleSelect: handleSelect,
+		handleCBChange: handleCBChange,
+		handleItemChange: handleItemChange
+	}
+
 	return (
-		<Paper className={classes.paper}>
+		<Paper className={classes.paper} elevation={3}>
 			<DisplayNodeHeaders title={survey.title} userId="id" /> 
 			<Typography variant="body1" className={classes.nodeBody}>{survey.description}</Typography>
 			{survey.elements.map((element, idx) => {
+				const cp = {...params, element: element};
 				return (
-					<RenderElement key={idx} reply={reply} handleSelect={handleSelect} handleCBChange={handleCBChange} handleItemChange={handleItemChange} element={element} />						
+					<RenderElement key={idx} {...cp}/>						
 				)
 			})}		
 		</Paper>
@@ -482,7 +393,7 @@ function Survey(props) {
 	const [ survey, setSurvey] = useState({ title: "", description: "", expiryDate: expDate });	
 	const [ item, setItem ] = useState({...blankItem});	
 	const [ items, setItems ] = useState([]);
-	const [ snackbar, setSnackbar ] = useState(false);
+	const [ snackbar, setSnackbar ] = useState({severity:"error", message:"", show: false});
 	
 	const handleChange = (event) => {
 		const updatedItems = [...items];
@@ -500,7 +411,7 @@ function Survey(props) {
 
 	const handleDelete = (elementId, optionId) => {
 		if(items[elementId].values.length < 3) {
-			setSnackbar(true);
+			setSnackbar({severity:"error", message: "Tienen que haber al menos dos opciones", show: true});
 			return;			
 		}
 
@@ -525,6 +436,7 @@ function Survey(props) {
 		} else {
 			target.childNodes.forEach((e,idx)=>{
 				copy[itemID].values[idx].selected = e.selected;
+				copy[itemID].values[idx].name = e.id;
 			})
 		}		
 		
@@ -714,9 +626,9 @@ function Survey(props) {
 				
 				<Button onClick={handleSubmit}>Guardar</Button>
 			</Paper>
-			<Snackbar anchorOrigin={{ vertical: 'top', horizontal: 'center' }} open={snackbar} onClose={()=>setSnackbar(false)} 
+			<Snackbar anchorOrigin={{ vertical: 'top', horizontal: 'center' }} open={snackbar.show} onClose={()=>setSnackbar({show:false})} 
 						autoHideDuration={3000}>  
-            	<Alert severity="error">Tienen que haber al menos dos opciones</Alert>
+            	<Alert severity={snackbar.severity}>{snackbar.message}</Alert>
 	        </Snackbar>
 				
 		</React.Fragment>
