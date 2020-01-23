@@ -4,13 +4,7 @@ import { styles } from "../../styles/styles"
 import Paper from '@material-ui/core/Paper';
 import Grid from '@material-ui/core/Grid';
 import TextField from '@material-ui/core/TextField';
-import Select from '@material-ui/core/Select';
 import IconButton from '@material-ui/core/IconButton';
-import RadioGroup from '@material-ui/core/RadioGroup';
-import FormGroup from '@material-ui/core/FormGroup';
-import Checkbox from '@material-ui/core/Checkbox';
-import Radio from '@material-ui/core/Radio';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
 import FormControl from '@material-ui/core/FormControl';
 import InputLabel from '@material-ui/core/InputLabel';
 import NativeSelect from '@material-ui/core/NativeSelect';
@@ -31,7 +25,7 @@ import Typography from '@material-ui/core/Typography';
 import Axios from 'axios';
 import { properties } from '../../properties';
 
-import DisplayNodeHeaders, { RenderElement } from './partial/NodePartials';
+import DisplayNodeHeaders, { RenderElement, RenderOption } from './partial/NodePartials';
 
 const SurveyGeneral = (props) => {
 	const { survey, handleSurvey, handleDateChange } = props;
@@ -124,172 +118,6 @@ const SurveyAddElement = (props) => {
 		);
 }
 
-const RenderCheckboxFragment = (props) => {
-	const { item, name, handleOptionChange, handleValueChange, handleDelete } = props;
-	const groupName = name + "-group";
-	const elementId = name.replace("element-","");
-	const classes = makeStyles(styles)();
-
-	return (
-		<React.Fragment >
-			<FormGroup aria-label={item.title} name={groupName} value={item.selected} >
-			
-				{item.values.map((val, idx)=>{
-					const valueName = "option-" + name + "-" +idx;
-					
-					return(
-						
-						<React.Fragment key={idx}>
-							<Grid container>
-								<Grid item sm={2} md={2}>
-									<IconButton className={classes.surveyFormControl} 
-										onClick={()=>handleDelete(elementId, idx)}><DeleteIcon />
-									</IconButton> 
-								</Grid>
-								<Grid item sm={10} md={5}>
-									<FormControl error={val.option.length === 0}>
-										<InputLabel>Valor de la Opcion</InputLabel>
-										<Input 
-											name={valueName}
-											id={valueName}
-											value={val.option}
-											onChange={handleOptionChange}
-											fullWidth
-											>
-										</Input>
-									</FormControl>
-								</Grid>
-								<Grid item sm={12} md={5}>
-									<FormControlLabel 
-										className={classes.surveyFormControl}
-										value={val.option.replace(/ /g, "_")} 
-										control={<Checkbox id={"optionid-"+idx} 
-										onChange={(e)=>handleValueChange(elementId, idx, e.target)} />} 
-										label={val.option} 
-										/>
-								</Grid>
-							</Grid>									
-						</React.Fragment>
-						)
-				})}
-			</FormGroup>
-		</React.Fragment>					
-	);
-};
-
-const RenderRadioFragment = (props) => {
-	const { item, name, handleOptionChange, handleValueChange, handleDelete } = props;
-	const groupName = name + "-group";
-	const elementId = name.replace("element-","");
-	const classes = makeStyles(styles)();
-
-	return (
-		<React.Fragment >
-    	    <RadioGroup aria-label={item.title} name={groupName} value={item.selected} >
-			
-				{item.values.map((val, idx)=>{
-					const valueName = "option-" + name + "-" +idx;
-					
-					return(
-						<React.Fragment key={idx}>
-							<Grid container> 
-							<Grid item sm={2}>
-									<IconButton className={classes.surveyFormControl} 
-										onClick={()=>handleDelete(elementId, idx)}><DeleteIcon />
-									</IconButton> 
-								</Grid>
-								<Grid item sm={10} md={5}>
-									<TextField name={valueName}
-										id={valueName}
-										label="Valor de la Opcion"
-										value={val.option}
-										onChange={handleOptionChange}
-										fullWidth
-										/>
-								</Grid>
-								<Grid item sm={12} md={5}>
-									<FormControlLabel 
-										className={classes.surveyFormControl}
-										value={val.option.replace(/ /g, "_")} 
-										control={<Radio id={"optionid-"+idx} 
-										onChange={(e)=>handleValueChange(elementId, idx)} />} 
-										label={val.option} 
-										/>
-								</Grid>
-							</Grid>									
-						</React.Fragment>
-						)
-				})}
-			</RadioGroup>
-		</React.Fragment>					
-	);
-};
-
-const RenderSelectFragment = (props) => {
-	const { item, name, multiline, handleValueChange } = props;
-	const elementId = name.replace("element-","");
-
-	const [valueName, setValueName] = useState("");
-
-	const classes = makeStyles(styles)();
-
-	const update = (e) => {
-		setValueName(e.target.value) ;
-	}
-
-	return (
-		<React.Fragment>
-			<Grid container>
-				<Grid item sm={12} md={6}>
-					<TextField name={valueName}
-					label="Valores separado por coma"
-					onChange={update}
-					fullWidth
-					/>
-				</Grid>
-				<Grid item sm={12} md={6}>
-				<Select
-					
-					multiple={multiline}
-					native
-					className={classes.surveyFormControl}
-					fullWidth
-					onChange={(e)=>handleValueChange(elementId, e.target.selectedIndex, e.target)}
-					>	
-						{valueName.split(',').map( (val, key) => {
-							if(!item.values[key]) item.values[key] = {};
-							item.values[key].option = val;
-
-							return (
-								<option id={"option-" + name + "-" + key} key={key} value={val}>{val}</option> 
-							)})}
-				</Select>
-				</Grid>
-			</Grid>
-		</React.Fragment>
-	)
-};
-
-const RenderOption = (props) => {
-	const { type } = props;
-					
-	if(type === "radio") {
-		return (
-			<RenderRadioFragment {...props} />					
-		);			
-	} else if(props.type === "checkbox") {
-		return (
-			<RenderCheckboxFragment {...props} />
-		);
-	} else if(props.type === "select" || props.type === "select-multi") {
-		return (
-			<RenderSelectFragment {...props} multiline={props.type === "select-multi"} />
-		)
-	}
-
-	return null
-}
-
 export const ViewSurvey = (props) => {
 	const [ data, setData ] = useState({loading:true});
 	const [ reply, setReply ] = useState({});
@@ -300,7 +128,8 @@ export const ViewSurvey = (props) => {
 			Axios.get(properties.server + "surveys/"+props.match.params.id)
 			.then(result=>{
 				const blankReply = { items: [] };
-				result.data.elements.forEach((element, id) => blankReply.items.push({ name: element.name,  value:"", values:[] }));
+				result.data.elements.forEach((element, id) => {					
+					blankReply.items.push({ name: element.name,  value:"", values:[] })});
 				setReply(blankReply);
 				setData({loading: false, survey: result.data});				
 			});
@@ -321,9 +150,18 @@ export const ViewSurvey = (props) => {
 		setReply(copy);
 	}
 
-	const handleCBChange = (itemid, valueid) => {
+	const handleCBChange = (itemid, {target}) => {
 		const copy = {...reply};
-		copy.items[itemid].values[valueid] = !copy.items[itemid].values[valueid];
+
+		const {values} = copy.items[itemid]; 
+		
+		const index = values.indexOf(target.value);
+
+		if(index >= 0) {
+			values.splice(index, 1);
+		} else {
+			values.push(target.value);
+		}
 
 		setReply(copy);
 	}
@@ -331,7 +169,7 @@ export const ViewSurvey = (props) => {
 	const handleSelect = ({target}) => {
 		const copy = {...reply};
 
-		copy.items.forEach((item, idx) => {
+		copy.items.forEach((item) => {
 			if(item.name === target.name) {
 				item.values=[];
 				target.childNodes.forEach((child) => {
@@ -352,6 +190,9 @@ export const ViewSurvey = (props) => {
 		)
 	}
 
+	const submit = () => {
+		console.log(reply);
+	}
 
 	if(data.loading) {
 		return (<RenderLoading />)
@@ -376,6 +217,14 @@ export const ViewSurvey = (props) => {
 					<RenderElement key={idx} {...cp}/>						
 				)
 			})}		
+			<Divider className={classes.spacedDivider} />
+			<Grid container>
+				<Grid item sm={12} md={5} ></Grid>
+				<Grid item sm={12} md={7} >
+					<Button variant="contained" onClick={submit}>Responder</Button>
+				</Grid>
+			</Grid>
+			
 		</Paper>
 	)		
 }
