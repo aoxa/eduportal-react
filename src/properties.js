@@ -1,3 +1,3 @@
 export const properties = {
-	server: 'http://localhost:8084/'
+	server: 'http://localhost:8086/'
 };

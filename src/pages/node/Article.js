@@ -22,7 +22,7 @@ import Divider from '@material-ui/core/Divider';
 import DisplayNodeHeader from './partial/NodePartials';
 
 const DisplayComments = (props) => {
-	const { children } = props.article; 
+	const { children } = props; 
 	const classes = makeStyles(styles)();
 
 	return (
@@ -53,10 +53,14 @@ class ViewArticle extends React.Component {
 	}
 
 	componentDidMount() {
-		axios.get(properties.server + "articles/"+this.props.match.params.id)
-			.then(result=>{
-				this.setState({loading: false, article: result.data});
-			});		
+		axios.all([
+			axios.get(properties.server + "articles/"+this.props.match.params.id),
+			axios.get(properties.server + "articles/"+this.props.match.params.id+"/comment")
+		])
+			.then(axios.spread((article, comments)=>{
+					this.setState({ ...this.state, children: comments.data, loading: false, article: article.data });
+			}), 
+			error=>console.log(error));
 	}
 
 	renderLoading(classes) {
@@ -79,14 +83,14 @@ class ViewArticle extends React.Component {
 	}
 
 	renderArticle(classes) {
-		const { article } = this.state;
+		const { article, children } = this.state;
 		return (
 			<React.Fragment>
 				<Paper className={classes.paper} elevation={3}>
 					<DisplayNodeHeader title={article.title} userId="id" />
 					<Typography variant="body1" className={classes.nodeBody}>{article.body}</Typography>
 					<Divider className={classes.spacedDivider} />
-					<DisplayComments article={article} />
+					<DisplayComments article={article} children={children} />
 				</Paper>
 
 				<Fab className={classes.fab} onClick={()=>this.setState({...this.state, dialog: true})} color="primary"><AddIcon /></Fab>

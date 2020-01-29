@@ -23,6 +23,7 @@ import Input from '@material-ui/core/Input';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import Typography from '@material-ui/core/Typography';
 import Axios from 'axios';
+import { Link as RouterLink } from 'react-router-dom';
 import { properties } from '../../properties';
 
 import DisplayNodeHeaders, { RenderElement, RenderOption } from './partial/NodePartials';
@@ -118,21 +119,103 @@ const SurveyAddElement = (props) => {
 		);
 }
 
+export const ViewSurveyReply = (props) => {
+	const classes = makeStyles(styles)();
+	const [ data, setData ] = useState({loading:true});
+	
+	useEffect(() => { 
+		if(data.loading) {
+			const { surveyid, replyid } = props.match.params;
+			Axios.all([
+				Axios.get(properties.server + "surveys/"+surveyid),
+				Axios.get(properties.server + "surveys/"+surveyid + "/reply/" + replyid)
+			]).then(Axios.spread((survey, replyResponse) => {
+				let reply = {...replyResponse.data};
+				reply.items = reply.elements.map((el)=>{
+					return {...el, 
+						error: false,
+						values: el.options.map((op)=>op.name),
+						value: el.options[0].name
+					}
+				});
+				console.log(reply.items.sort((a,b)=> a.name < b.name? -1:1));
+				console.log(survey.data)
+				
+				setData({loading:false, survey: survey.data, reply: reply });
+			}));
+		}
+	})
+
+	if(data.loading) return (<RenderLoading />)
+
+	const { survey, reply } = data;
+
+	const params = {
+		reply: reply,
+		handleSelect: ()=>{},
+		handleCBChange: ()=>{},
+		handleItemChange: ()=>{}
+	}
+
+	return (<Paper className={classes.paper} elevation={3}>				
+				<DisplayNodeHeaders title={survey.title} userId="id" /> 
+	<Typography variant="subtitle2">Respuesta de: [ingresar usuario], total: {reply.score}</Typography>
+				<Typography variant="body1" className={classes.nodeBody}>{survey.description}</Typography>
+				{survey.elements.map((element, idx) => {
+					const cp = {...params, element: element};
+					
+					return (
+						<RenderElement key={idx} {...cp}/>						
+					)
+				})}		
+
+			</Paper>
+		)
+}
+
+const RenderLoading = () => {
+	const classes = makeStyles(styles)();
+
+	return (
+		<Paper className={classes.paper}>
+			<CircularProgress />
+		</Paper>
+	)
+}
+
+function getType(element) {
+	let type = "text";
+	if(element.type === "select") {
+		type = "select";
+		if(element.checkBox) {
+			type = "checkbox";
+		} else if (element.radioButton) {
+			type = "radio"
+		} else if(element.multivalued) {
+			type += "-multi"
+		}
+	}	
+	return type;
+}
+
 export const ViewSurvey = (props) => {
 	const [ data, setData ] = useState({loading:true});
 	const [ reply, setReply ] = useState({});
 	const classes = makeStyles(styles)();
 
-	useEffect(() => {
+	useEffect(() => {		
 		if(data.loading) {
-			Axios.get(properties.server + "surveys/"+props.match.params.id)
-			.then(result=>{
+			Axios.all([
+				Axios.get(properties.server + "surveys/"+props.match.params.id),
+				Axios.get(properties.server + "surveys/"+props.match.params.id + "/reply")
+			]).then(Axios.spread((survey, replies) => {
 				const blankReply = { items: [] };
-				result.data.elements.forEach((element, id) => {					
-					blankReply.items.push({ name: element.name,  value:"", values:[] })});
+				survey.data.elements.forEach((element, id) => {									
+					blankReply.items.push({ type: getType(element), name: element.name,  value:"", values:[], error:false })});
 				setReply(blankReply);
-				setData({loading: false, survey: result.data});				
-			});
+				setData({loading: false, survey: survey.data, replies: replies.data});
+			  }),
+			  (error)=>console.log(error));
 		}	
 	  });
 
@@ -173,7 +256,7 @@ export const ViewSurvey = (props) => {
 			if(item.name === target.name) {
 				item.values=[];
 				target.childNodes.forEach((child) => {
-					if(child.selected) item.values.push(child.value);	
+					if(child.selected && child.value.length > 0) { item.values.push(child.value); }	
 				})
 				
 			}
@@ -182,23 +265,39 @@ export const ViewSurvey = (props) => {
 		setReply(copy);
 	}
 
-	const RenderLoading = () => {
-		return (
-			<Paper className={classes.paper}>
-				<CircularProgress />
-			</Paper>
-		)
+	const validate = () => {
+		const copy = {...reply};
+
+		let error = false;
+		
+		copy.items.forEach( (item) => {
+			let noValues = item.values.length === 0;
+			let noValue = item.value.length === 0;
+			item.error = noValue && noValues;
+			error = item.error || error;
+		});
+
+		setReply(copy);
+
+		return error;
 	}
 
 	const submit = () => {
-		console.log(reply);
+		let isInvalid = validate();
+		
+		if( !isInvalid ) {
+			Axios.post(properties.server + "surveys/" + props.match.params.id + "/reply",
+				{replies: reply.items
+				}
+			).then((result)=>console.log(result));
+		}
 	}
 
 	if(data.loading) {
 		return (<RenderLoading />)
 	}
 
-	const { survey } = data;
+	const { survey, replies } = data;
 
 	const params = {
 		reply: reply,
@@ -224,7 +323,14 @@ export const ViewSurvey = (props) => {
 					<Button variant="contained" onClick={submit}>Responder</Button>
 				</Grid>
 			</Grid>
-			
+			{replies.map((userReply, key)=>{
+				return (
+					<Grid container>
+						<Grid item sm={12} md={5} >{userReply.score}</Grid>
+						<Grid item sm={12} md={7} ><RouterLink to={ "/survey/"+survey.id+"/reply/"+userReply.id }>{userReply.score}</RouterLink></Grid>
+					</Grid>
+				)
+			})}
 		</Paper>
 	)		
 }

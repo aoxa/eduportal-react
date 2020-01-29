@@ -5,7 +5,7 @@ import Admin from './pages/Admin';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Course from './pages/Course';
-import Survey, { ViewSurvey } from './pages/node/Survey';
+import Survey, { ViewSurvey, ViewSurveyReply } from './pages/node/Survey';
 import ViewArticle, { EditArticle } from './pages/node/Article';
 import Form from './pages/Form';
 import Profile from './pages/Profile';
@@ -33,6 +33,7 @@ function App(props) {
             <Route path="/login" component={Login} />
             <Route path="/course" component={Course} />
             <Route path="/survey/edit" component={Survey} />
+            <Route path="/survey/:surveyid/reply/:replyid" component={ViewSurveyReply} />
             <Route path="/survey/:id" component={ViewSurvey} />  
             <Route exact path="/article/edit" component={EditArticle} /> 
             <Route exact path="/article/:id" component={ViewArticle} /> 
